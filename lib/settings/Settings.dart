@@ -203,6 +203,18 @@ class _SettingsState extends State<Settings> {
     setState(() {
       colorblindModeIsEnabled = value;
     });
+    bool isColorBlindMode = prefs.getBool("isColorBlindEnabled") ?? false;
+    final res = jsonDecode(await NetworkUtils.getWithErrorHandling(context,
+              'getRouteInformation?colorblind=${isColorBlindMode ? "Y" : "N"}'));
+
+    if (res['metadata'] != null &&
+        res['metadata']?['version'] != null &&
+        res['metadata']['version'] is int) {
+      await DefaultCacheManager().emptyCache();
+      await prefs.setString('lastCheckedAssets', DateTime.now().toString());
+      await prefs.setInt('curInfoVersion', res['metadata']['version']);
+      await prefs.setString('routeInformation', jsonEncode(res));
+    }
     DialogAction action = DialogAction("OK", () {
       DefaultCacheManager().emptyCache().then((_) async {
         final prefs = await SharedPreferences.getInstance();
