@@ -23,6 +23,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:fc_native_image_resize/fc_native_image_resize.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 
 
@@ -291,9 +292,22 @@ class _OnBoardingSwitcherState extends State<OnBoardingSwitcher>
 
   // Loads and resizes bus images given a path to the image
   Future<Uint8List> resizeImageFromPath(String pathToImage, int width) async {
+    Uint8List bytes;
 
-    final imageFile = File(pathToImage);
-    final originalImage = img.decodeImage(await imageFile.readAsBytes());
+    if (pathToImage.startsWith('http')) {
+    // Load from URL
+    final response = await http.get(Uri.parse(pathToImage));
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load image from network: $pathToImage");
+    }
+    bytes = response.bodyBytes;
+  } else {
+    // Load from asset
+    final byteData = await rootBundle.load(pathToImage);
+    bytes = byteData.buffer.asUint8List();
+  }
+
+  final originalImage = img.decodeImage(bytes);
 
     if (originalImage == null) {
       throw Exception("Failed to decode the image from path $pathToImage");
