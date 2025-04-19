@@ -4,7 +4,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:mbus/interfaces/BootlegNotifier.dart';
 import 'package:mbus/GlobalConstants.dart';
 import 'package:mbus/constants.dart';
@@ -17,6 +16,8 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:vibration/vibration_presets.dart';
+import 'package:flutter/services.dart';
 
 
 import '../map/MainMap.dart';
@@ -147,11 +148,7 @@ class _FavoritesState extends State<Favorites> {
                   header: CustomHeader(
                     builder: (context, status) {
                       if (status == RefreshStatus.canRefresh) {
-                        Vibrate.canVibrate.then((value) {
-                          if (value) {
-                            Vibrate.feedback(FeedbackType.impact);
-                          }
-                        });
+                        HapticFeedback.mediumImpact();
                       }
                       return Container(
                         child: Center(

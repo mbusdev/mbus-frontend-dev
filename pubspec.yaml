@@ -39,7 +39,7 @@ dependencies:
   pull_to_refresh: ^2.0.0
   introduction_screen: ^3.1.12
   flutter_svg: ^2.0.9
-  flutter_vibrate: ^1.1.0
+  vibration: ^3.1.3
   #bitmap: ^0.2.0
   fc_native_image_resize: ^0.14.2
 #  flutter_animarker_modified:
@@ -57,7 +57,7 @@ dependencies:
   functional_widget_annotation: ^0.10.0
   flutter_phoenix: ^1.1.1
   expandable_page_view: ^1.0.17
-  geolocator: ^13.0.2
+  geolocator: ^14.0.0
   logging: ^1.2.0
   connectivity_plus: ^6.1.3
 
