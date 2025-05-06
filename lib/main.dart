@@ -14,13 +14,17 @@ import 'package:mbus/favorites/Favorites.dart';
 import 'package:mbus/GlobalConstants.dart';
 import 'package:mbus/map/MainMap.dart';
 import 'package:mbus/onboarding/Onboarding.dart';
-import 'package:bitmap/bitmap.dart';
+// import 'package:bitmap/bitmap.dart';
 import 'package:mbus/settings/Settings.dart';
 import 'package:mbus/constants.dart';
 import 'package:mbus/mbus_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:fc_native_image_resize/fc_native_image_resize.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
 
 
 
@@ -287,12 +291,30 @@ class _OnBoardingSwitcherState extends State<OnBoardingSwitcher>
   }
 
   // Loads and resizes bus images given a path to the image
-  Future<BitmapDescriptor> getBusBitmap(String pathToImage,
-      {width: 124}) async {
-    final image_bmap = await Bitmap.fromProvider(AssetImage(pathToImage));
-    final image = BitmapDescriptor.fromBytes(
-        image_bmap.apply(BitmapResize.to(width: width)).buildHeaded());
-    return image;
+  Future<Uint8List> resizeImageFromPath(String pathToImage, int width) async {
+    Uint8List bytes;
+
+    if (pathToImage.startsWith('http')) {
+    // Load from URL
+    final response = await http.get(Uri.parse(pathToImage));
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load image from network: $pathToImage");
+    }
+    bytes = response.bodyBytes;
+  } else {
+    // Load from asset
+    final byteData = await rootBundle.load(pathToImage);
+    bytes = byteData.buffer.asUint8List();
+  }
+
+  final originalImage = img.decodeImage(bytes);
+
+    if (originalImage == null) {
+      throw Exception("Failed to decode the image from path $pathToImage");
+    }
+    final resizedImage = img.copyResize(originalImage, width: width);
+
+    return Uint8List.fromList(img.encodePng(resizedImage));
   }
 
   Future<void> _loadBusImages() async {
@@ -300,32 +322,34 @@ class _OnBoardingSwitcherState extends State<OnBoardingSwitcher>
     final STOP_WIDTH = (MediaQuery.of(context).devicePixelRatio * 22).toInt();
 
     final markerImages = GlobalConstants().marker_images;
-    // Load bus stop image
-    markerImages["BUS_STOP"] =
-        await getBusBitmap("assets/bus_stop.png", width: STOP_WIDTH);
+    final resizedImageBytes = await resizeImageFromPath('assets/bus_stop.png', STOP_WIDTH);
+    markerImages["BUS_STOP"] = BitmapDescriptor.fromBytes(resizedImageBytes);
 
     final prefs = await SharedPreferences.getInstance();
     final isColorblind = prefs.getBool("isColorBlindEnabled") ?? false;
 
     for (String routeIdentifier
         in GlobalConstants().ROUTE_ID_TO_ROUTE_NAME.keys) {
-      late ImageProvider _provider;
+      late String _provider;
 
       // Load bus image (tries lookup in cache) or use default if it fails
       _provider = await CachedNetworkImageProvider(
           "$BACKEND_URL/getVehicleImage/${routeIdentifier}?colorblind=${isColorblind ? "Y" : "N"}",
           errorListener: (final error) {
             log.warning("Error loading bus image for $routeIdentifier: $error | Request sent to: $BACKEND_URL/getVehicleImage/${routeIdentifier}?colorblind=${isColorblind ? "Y" : "N"}");
-            _provider = AssetImage('assets/bus_blue.png');
-      });
+            _provider = ('assets/bus_blue.png');
+      }).url;
 
       log.info("Loading bus image for $routeIdentifier");
 
       // Resize bus image and add to map
-      markerImages[routeIdentifier] = await BitmapDescriptor.fromBytes(
-          (await Bitmap.fromProvider(_provider))
-              .apply(BitmapResize.to(width: BUS_WIDTH))
-              .buildHeaded());
+      final resizedImageBytes2 = await resizeImageFromPath(_provider, BUS_WIDTH);
+      markerImages[routeIdentifier] = BitmapDescriptor.fromBytes(resizedImageBytes2);
+      
+      // BitmapDescriptor.bytes(
+      //     (await Bitmap.fromProvider(_provider))
+      //         .apply(BitmapResize.to(width: BUS_WIDTH))
+      //         .buildHeaded());
     }
   }
 
