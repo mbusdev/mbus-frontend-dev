@@ -19,7 +19,7 @@ plugins {
 android {
     namespace = "com.example.mbur_recovery"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.1.13356709"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -35,11 +35,11 @@ android {
         applicationId = "com.example.mbur_recovery"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["API_KEY"] = apiKey
+        resValue("string", "google_maps_api_key", apiKey)
     }
 
     buildTypes {
