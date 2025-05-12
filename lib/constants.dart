@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 const Color MICHIGAN_BLUE = Color(0xFF00274C);
 const Color MICHIGAN_MAIZE = Color(0xFFFFCB05);
+//const String BACKEND_URL = String.fromEnvironment("BACKEND_URL", defaultValue: "http://localhost:3000/mbus/api/v3/"); // < iphone testing
+//const String BACKEND_URL = String.fromEnvironment("BACKEND_URL", defaultValue: "http://10.0.2.2:3000/mbus/api/v3/");  // < android testing
 const String BACKEND_URL = String.fromEnvironment("BACKEND_URL", defaultValue: "https://www.efeakinci.host/mbus/api/v3");
 
 
